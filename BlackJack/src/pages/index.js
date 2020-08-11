@@ -1,5 +1,10 @@
 import React from "react"
+import Hand from "./Hand";
 
 export default function Home() {
-  return <div>Hello world!</div>
+  return (
+    <div>
+      <Hand/>
+    </div>
+  )
 }

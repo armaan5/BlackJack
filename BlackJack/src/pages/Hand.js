@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import axios from "axios";
+import Card from './Card';
 const API_BASE_URL = "https://deckofcardsapi.com/api/deck";
 
 class Hand extends Component {
@@ -8,7 +9,9 @@ class Hand extends Component {
         this.state = { 
             deck: null, 
             hand: [],
-            handValue: 0
+            handValue: 0,
+            dealer: [],
+            dealerValue: 0
         }
         this.drawCard = this.drawCard.bind(this);
         this.computeHandValue = this.computeHandValue.bind(this);
@@ -26,11 +29,8 @@ class Hand extends Component {
                 cardValue += 10;
             else {
                 cardValue += parseInt(hand[i].value); 
-                console.log(parseInt(hand[i].value));
             }
-            //console.log(hand[i].value);
         }
-        //console.log("card value:" + cardValue);
         return cardValue;
     }
 
@@ -39,19 +39,33 @@ class Hand extends Component {
         let id = deck.data.deck_id;
         let cardURL = `${API_BASE_URL}/${id}/draw/?count=2`;
         let cardRes = await axios.get(cardURL);
+
+        console.log(cardRes.data);
+
         let firstHand = cardRes.data.cards.map(c => ({
             id: c.code,
             value: c.value,
-            image: c.image         
+            image: c.image,
+            name: `${c.value} of ${c.suit}`        
         }
         ));
-
+        cardRes = await axios.get(cardURL);
+        let dealerHand = cardRes.data.cards.map(c => ({
+            id: c.code,
+            value: c.value,
+            image: c.image,
+            name: `${c.value} of ${c.suit}`        
+        }
+        ));
         this.setState({
             deck: deck.data,
             hand: firstHand,
-            handValue: this.computeHandValue(firstHand)
+            handValue: this.computeHandValue(firstHand),
+            dealer: dealerHand,
+            dealerValue: this.computeHandValue(dealerHand)
         });
     }
+
 
     async drawCard() {
         let id = this.state.deck.deck_id;
@@ -61,10 +75,26 @@ class Hand extends Component {
         console.log(card);
     }
     render() { 
+        const player = this.state.hand.map(c => (
+            <Card
+                image = {c.image}
+                name = {c.name}
+                key = {c.id}
+            />
+        )); 
+        const dealer = this.state.dealer.map(c => (
+            <Card
+                image = {c.image}
+                name = {c.name}
+                key = {c.id}
+            />
+        ));
         return ( 
             <div>
                 <h1>BlackJack!</h1>
                 <button onClick = {this.drawCard}>Hit Me</button>
+                {player}
+                {dealer}
             </div>
          );
     }

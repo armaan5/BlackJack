@@ -21,6 +21,7 @@ class Hand extends Component {
 
     computeHandValue(hand) {
         let cardValue = 0;
+        console.log(hand);
         for(let i = 0; i < hand.length; i++){
             if( !hand[i].value.localeCompare("ACE") )
                 if((this.state.handValue + 11) < 21)
@@ -75,7 +76,38 @@ class Hand extends Component {
         let cardURL = `${API_BASE_URL}/${id}/draw`;
         let cardRes = await axios.get(cardURL);
         let card = cardRes.data.cards[0];
-        console.log(card);
+
+        this.setState(st => ({
+            hand: [
+                ...st.hand,
+                {
+                    id: card.code,
+                    value: card.value,
+                    image: card.image,
+                    name: `${card.value} of ${card.suit}`   
+                }
+            ],
+        }));
+        this.setState({
+            handValue: this.computeHandValue(this.state.hand)
+        });
+
+        if(this.state.dealerValue < 17){
+            this.setState(st => ({
+                dealer: [
+                    ...st.dealer,
+                    {
+                        id: card.code,
+                        value: card.value,
+                        image: card.image,
+                        name: `${card.value} of ${card.suit}`   
+                    }
+                ],
+            }));
+            this.setState({
+                dealerValue: this.computeHandValue(this.state.dealer)
+            });
+        }
     }
     render() { 
         const player = this.state.hand.map(c => (
@@ -95,11 +127,11 @@ class Hand extends Component {
         return ( 
             <div className = "App">
                 <h1 className = "Title">BlackJack!</h1>
-                <h2>Dealer</h2>
+                <h2>Dealer : {this.state.dealerValue}</h2>
                 <div className = "Dealer">
                     {dealer}
                 </div>
-                <h2>Player</h2>
+                <h2>Player : {this.state.handValue}</h2>
                 <div className = "Player">
                     {player}
                 </div>

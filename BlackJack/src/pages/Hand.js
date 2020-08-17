@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import axios from "axios";
 import Card from './Card';
+import "./Hand.css"
+import cardBack from "./images/cardBack.png"
 const API_BASE_URL = "https://deckofcardsapi.com/api/deck";
 
 class Hand extends Component {
@@ -57,6 +59,7 @@ class Hand extends Component {
             name: `${c.value} of ${c.suit}`        
         }
         ));
+        dealerHand[0].image = cardBack;   //hide the dealer's first card
         this.setState({
             deck: deck.data,
             hand: firstHand,
@@ -90,11 +93,19 @@ class Hand extends Component {
             />
         ));
         return ( 
-            <div>
-                <h1>BlackJack!</h1>
-                <button onClick = {this.drawCard}>Hit Me</button>
-                {player}
-                {dealer}
+            <div className = "App">
+                <h1 className = "Title">BlackJack!</h1>
+                <h2>Dealer</h2>
+                <div className = "Dealer">
+                    {dealer}
+                </div>
+                <h2>Player</h2>
+                <div className = "Player">
+                    {player}
+                </div>
+                <button onClick = {this.drawCard} className = "Hand-btn">
+                    Hit Me
+                </button>
             </div>
          );
     }

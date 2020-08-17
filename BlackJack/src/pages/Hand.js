@@ -13,10 +13,13 @@ class Hand extends Component {
             hand: [],
             handValue: 0,
             dealer: [],
-            dealerValue: 0
+            dealerValue: 0,
+            gameOver: false,
+            win: null
         }
         this.drawCard = this.drawCard.bind(this);
         this.computeHandValue = this.computeHandValue.bind(this);
+        this.showHands = this.showHands.bind(this);
     }
 
     computeHandValue(hand) {
@@ -42,8 +45,6 @@ class Hand extends Component {
         let id = deck.data.deck_id;
         let cardURL = `${API_BASE_URL}/${id}/draw/?count=2`;
         let cardRes = await axios.get(cardURL);
-
-        console.log(cardRes.data);
 
         let firstHand = cardRes.data.cards.map(c => ({
             id: c.code,
@@ -108,7 +109,43 @@ class Hand extends Component {
                 dealerValue: this.computeHandValue(this.state.dealer)
             });
         }
+
+        if(this.state.handValue == 21){
+            this.setState({ 
+                gameOver: true,
+                win: true 
+            });
+        }
+        if(this.state.handValue > 21){
+            this.setState({ 
+                gameOver: true,
+                win: false 
+            });            
+        }
+        if(this.state.dealerValue > 21){
+            this.setState({ 
+                gameOver: true,
+                win: false 
+            });
+        }
     }
+
+        
+    showHands(){
+        if(this.state.handValue > this.state.dealerValue){
+            this.setState({ 
+                gameOver: true,
+                win: true 
+            });            
+        }
+        else{
+            this.setState({ 
+                gameOver: true,
+                win: false
+            });
+        }
+    }
+
     render() { 
         const player = this.state.hand.map(c => (
             <Card
@@ -127,7 +164,7 @@ class Hand extends Component {
         return ( 
             <div className = "App">
                 <h1 className = "Title">BlackJack!</h1>
-                <h2>Dealer : {this.state.dealerValue}</h2>
+                <h2>Dealer</h2>
                 <div className = "Dealer">
                     {dealer}
                 </div>
@@ -135,9 +172,19 @@ class Hand extends Component {
                 <div className = "Player">
                     {player}
                 </div>
-                <button onClick = {this.drawCard} className = "Hand-btn">
-                    Hit Me
-                </button>
+                
+                {!this.state.gameOver 
+                ?
+                    <div>
+                        <button onClick = {this.drawCard} className = "Hand-btn">Hit Me</button>
+                        <button onClick = {this.showHands} className = "Hand-btn">Stand</button>
+                    </div>
+                :
+                    <div>
+                        <h2>{this.state.win ? "You win!" : "You lose"}</h2>
+                        <button onClick = {()=>window.location.reload(false)}>Play Again?</button>
+                    </div>
+                }
             </div>
          );
     }

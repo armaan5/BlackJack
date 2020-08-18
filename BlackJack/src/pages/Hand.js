@@ -15,29 +15,41 @@ class Hand extends Component {
             dealer: [],
             dealerValue: 0,
             gameOver: false,
-            win: null
+            win: null,
+            hiddenCard: null
         }
         this.drawCard = this.drawCard.bind(this);
         this.computeHandValue = this.computeHandValue.bind(this);
         this.showHands = this.showHands.bind(this);
+        this.revealCard = this.revealCard.bind(this);
     }
 
     computeHandValue(hand) {
         let cardValue = 0;
-        console.log(hand);
         for(let i = 0; i < hand.length; i++){
-            if( !hand[i].value.localeCompare("ACE") )
-                if((this.state.handValue + 11) < 21)
-                    cardValue += 11;
-                else
-                    cardValue += 1;
-            else if( !hand[i].value.localeCompare("QUEEN") || !hand[i].value.localeCompare("KING") || !hand[i].value.localeCompare("JACK"))
+            if( !hand[i].value.localeCompare("QUEEN") || !hand[i].value.localeCompare("KING") || !hand[i].value.localeCompare("JACK"))
                 cardValue += 10;
-            else {
+            else if( hand[i].value.localeCompare("ACE") ){
                 cardValue += parseInt(hand[i].value); 
             }
         }
+        console.log(cardValue);
+        for(let i = 0; i < hand.length; i++){               //add ace values
+            if( !hand[i].value.localeCompare("ACE") ){
+                if( (cardValue + 11) > 21)
+                    cardValue += 1;
+                else
+                    cardValue += 11;
+                console.log(hand[i].value + " " + cardValue);
+            }
+        }
         return cardValue;
+    }
+
+    revealCard() {
+        let copy = [...this.state.dealer];
+        copy[0].image = this.state.hiddenCard;
+        this.setState({ dealer: copy });
     }
 
     async componentDidMount() {
@@ -53,7 +65,8 @@ class Hand extends Component {
             name: `${c.value} of ${c.suit}`        
         }
         ));
-        cardRes = await axios.get(cardURL);
+
+        cardRes = await axios.get(cardURL);   //draw 2 for dealer
         let dealerHand = cardRes.data.cards.map(c => ({
             id: c.code,
             value: c.value,
@@ -61,6 +74,7 @@ class Hand extends Component {
             name: `${c.value} of ${c.suit}`        
         }
         ));
+        this.setState({ hiddenCard: dealerHand[0].image })
         dealerHand[0].image = cardBack;   //hide the dealer's first card
         this.setState({
             deck: deck.data,
@@ -70,14 +84,13 @@ class Hand extends Component {
             dealerValue: this.computeHandValue(dealerHand)
         });
     }
-
-
+    
     async drawCard() {
         let id = this.state.deck.deck_id;
-        let cardURL = `${API_BASE_URL}/${id}/draw`;
+        let cardURL = `${API_BASE_URL}/${id}/draw/?count=2`;
         let cardRes = await axios.get(cardURL);
         let card = cardRes.data.cards[0];
-
+        let dealerCard = cardRes.data.cards[1];
         this.setState(st => ({
             hand: [
                 ...st.hand,
@@ -89,44 +102,54 @@ class Hand extends Component {
                 }
             ],
         }));
-        this.setState({
-            handValue: this.computeHandValue(this.state.hand)
-        });
-
-        if(this.state.dealerValue < 17){
-            this.setState(st => ({
-                dealer: [
-                    ...st.dealer,
-                    {
-                        id: card.code,
-                        value: card.value,
-                        image: card.image,
-                        name: `${card.value} of ${card.suit}`   
-                    }
-                ],
-            }));
-            this.setState({
-                dealerValue: this.computeHandValue(this.state.dealer)
-            });
-        }
-
-        if(this.state.handValue == 21){
+        this.setState({ handValue: this.computeHandValue(this.state.hand) });        
+        if(this.state.handValue === 21){
             this.setState({ 
                 gameOver: true,
-                win: true 
+                win: true,
             });
+            this.revealCard();
+            return;
         }
         if(this.state.handValue > 21){
             this.setState({ 
                 gameOver: true,
                 win: false 
-            });            
+            });
+            this.revealCard();
+            return;            
         }
+
+
+        if(this.state.dealerValue < 17){
+
+            this.setState(st => ({
+                dealer: [
+                    ...st.dealer,
+                    {
+                        id: dealerCard.code,
+                        value: dealerCard.value,
+                        image: dealerCard.image,
+                        name: `${dealerCard.value} of ${dealerCard.suit}`   
+                    }
+                ],
+            }));
+            this.setState({ dealerValue: this.computeHandValue(this.state.dealer) });
+        }
+
         if(this.state.dealerValue > 21){
+            this.setState({ 
+                gameOver: true,
+                win: true 
+            });
+            this.revealCard();
+        }
+        if(this.state.dealerValue === 21){
             this.setState({ 
                 gameOver: true,
                 win: false 
             });
+            this.revealCard();
         }
     }
 
@@ -136,17 +159,19 @@ class Hand extends Component {
             this.setState({ 
                 gameOver: true,
                 win: true 
-            });            
+            });
+            this.revealCard();
         }
         else{
             this.setState({ 
                 gameOver: true,
                 win: false
             });
+            this.revealCard();
         }
     }
 
-    render() { 
+    render() {
         const player = this.state.hand.map(c => (
             <Card
                 image = {c.image}
@@ -161,6 +186,7 @@ class Hand extends Component {
                 key = {c.id}
             />
         ));
+        
         return ( 
             <div className = "App">
                 <h1 className = "Title">BlackJack!</h1>
@@ -168,7 +194,7 @@ class Hand extends Component {
                 <div className = "Dealer">
                     {dealer}
                 </div>
-                <h2>Player : {this.state.handValue}</h2>
+                <h2>Player</h2>
                 <div className = "Player">
                     {player}
                 </div>
@@ -182,7 +208,7 @@ class Hand extends Component {
                 :
                     <div>
                         <h2>{this.state.win ? "You win!" : "You lose"}</h2>
-                        <button onClick = {()=>window.location.reload(false)}>Play Again?</button>
+                        <button onClick = {() => window.location.reload(false)} className = "Hand-btn">Play Again?</button>
                     </div>
                 }
             </div>

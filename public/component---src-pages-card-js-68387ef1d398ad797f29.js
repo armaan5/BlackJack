@@ -1,0 +1,2 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[4],{mKPN:function(n,t,e){"use strict";e.r(t);var i=e("dI71"),r=e("q1tI"),o=e.n(r),s=(e("yiDf"),function(n){function t(t){return n.call(this,t)||this}return Object(i.a)(t,n),t.prototype.render=function(){return o.a.createElement("img",{className:"playing-card",src:this.props.image,alt:this.props.name,key:this.props.id})},t}(r.Component));t.default=s},yiDf:function(n,t,e){}}]);
+//# sourceMappingURL=component---src-pages-card-js-68387ef1d398ad797f29.js.map

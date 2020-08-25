@@ -33,14 +33,12 @@ class Hand extends Component {
                 cardValue += parseInt(hand[i].value); 
             }
         }
-        console.log(cardValue);
         for(let i = 0; i < hand.length; i++){               //add ace values
             if( !hand[i].value.localeCompare("ACE") ){
                 if( (cardValue + 11) > 21)
                     cardValue += 1;
                 else
                     cardValue += 11;
-                console.log(hand[i].value + " " + cardValue);
             }
         }
         return cardValue;
@@ -57,7 +55,7 @@ class Hand extends Component {
         let id = deck.data.deck_id;
         let cardURL = `${API_BASE_URL}/${id}/draw/?count=2`;
         let cardRes = await axios.get(cardURL);
-
+        console.log(cardRes);
         let firstHand = cardRes.data.cards.map(c => ({
             id: c.code,
             value: c.value,
